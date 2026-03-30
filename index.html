@@ -335,7 +335,7 @@
 <div class="header">
   <h1>Graph Database Comparison</h1>
   <p>A comprehensive, interactive comparison of graph databases — features, query languages, scalability, licensing, and more. Inspired by <a href="https://superlinked.com/vector-db-comparison" style="color:var(--accent2)">Superlinked's Vector DB Comparison</a>.</p>
-  <div class="meta">Last updated: March 2026 · 11 databases · Compiled by HydraDB</div>
+  <div class="meta">Last updated: March 2026 · 14 databases · Compiled by HydraDB</div>
 </div>
 
 <div class="controls">
@@ -349,10 +349,10 @@
 </div>
 
 <div class="stats-bar">
-  <div class="stat-card"><div class="num" id="totalCount">11</div><div class="label">Databases</div></div>
-  <div class="stat-card"><div class="num">9</div><div class="label">Open Source</div></div>
-  <div class="stat-card"><div class="num">8</div><div class="label">Query Languages</div></div>
-  <div class="stat-card"><div class="num">8</div><div class="label">Cloud Options</div></div>
+  <div class="stat-card"><div class="num" id="totalCount">14</div><div class="label">Databases</div></div>
+  <div class="stat-card"><div class="num">11</div><div class="label">Open Source</div></div>
+  <div class="stat-card"><div class="num">9</div><div class="label">Query Languages</div></div>
+  <div class="stat-card"><div class="num">10</div><div class="label">Cloud Options</div></div>
 </div>
 
 <div class="table-container">
@@ -645,6 +645,78 @@ const databases = [
     pros: ["True hybrid SQL + Cypher in one query", "Full PostgreSQL compatibility", "Enterprise features (HA, monitoring)", "Apache 2.0 community edition"],
     cons: ["Smaller community than Neo4j/AGE", "Company rebranding (Bitnine → SKAI) adds confusion", "Lags behind PostgreSQL upstream releases", "Limited cloud/managed options"],
     dbEngineRank: "Niche"
+  },
+  {
+    name: "TypeDB",
+    url: "https://typedb.com",
+    type: "Polymorphic DB",
+    query: "TypeQL",
+    model: "Hypergraph / Conceptual",
+    acid: "yes",
+    distributed: "planned",
+    cloud: "TypeDB Cloud",
+    license: "MPL 2.0 (CE) / Commercial (EE)",
+    pricing: "Free CE · Cloud & Enterprise contact sales",
+    ai: "partial",
+    tags: ["open-source", "managed-cloud"],
+    founded: "2016",
+    headquarters: "London, UK",
+    storage: "RocksDB-based (TypeDB 3 — Rust rewrite)",
+    scalability: "Single-node optimized (TypeDB 3), distributed planned, 3-5x perf improvement over v2",
+    bestFor: "Complex domain modeling, biomedical research, regulatory compliance, knowledge representation",
+    queryDetails: "TypeQL — declarative, functional, strongly-typed, supports n-ary relationships natively, Datalog-like functions, schema-first with type inheritance and polymorphism",
+    aiDetails: "TypeQL designed for LLM readability, knowledge graph foundation for AI, schema-enforced reasoning",
+    pros: ["Most expressive data model (hypergraph)", "Schema-first prevents data quality issues", "N-ary relationships without workarounds", "Rust rewrite = fast"],
+    cons: ["TypeQL learning curve (non-standard)", "Smaller community", "Distributed support still maturing", "Less ecosystem tooling"],
+    dbEngineRank: "#11 Graph DB"
+  },
+  {
+    name: "OrientDB",
+    url: "https://orientdb.dev",
+    type: "Multi-Model",
+    query: "SQL-like / Gremlin",
+    model: "Property Graph + Document + Object + KV",
+    acid: "yes",
+    distributed: "yes",
+    cloud: "No official managed",
+    license: "Apache 2.0 (CE) / Commercial (EE)",
+    pricing: "Free CE · EE contact sales",
+    ai: "no",
+    tags: ["open-source", "multi-model", "distributed"],
+    founded: "2010",
+    headquarters: "London, UK (SAP acquired, now community-driven)",
+    storage: "PLocal (paginated local) and memory storage engines",
+    scalability: "Multi-master replication, sharding, distributed architecture",
+    bestFor: "Multi-model use cases, content management, legacy migration from RDBMS",
+    queryDetails: "SQL-like syntax (easy for RDBMS devs), Gremlin support via TinkerPop, no JOINs needed — direct relationship traversal",
+    aiDetails: "No native AI/vector features",
+    pros: ["Multi-model flexibility", "SQL-like syntax lowers barrier", "No JOINs for relationship traversal", "Apache 2.0 license"],
+    cons: ["Development slowed significantly", "SAP divested — uncertain future", "Documentation outdated", "Falling behind modern competitors"],
+    dbEngineRank: "#12 Graph DB"
+  },
+  {
+    name: "PuppyGraph",
+    url: "https://www.puppygraph.com",
+    type: "Graph Query Engine",
+    query: "openCypher / Gremlin",
+    model: "Property Graph (virtual)",
+    acid: "N/A (reads from source)",
+    distributed: "yes",
+    cloud: "PuppyGraph Cloud",
+    license: "Proprietary",
+    pricing: "Free Developer Edition · Enterprise by compute resources",
+    ai: "partial",
+    tags: ["managed-cloud", "distributed"],
+    founded: "2023",
+    headquarters: "San Jose, CA",
+    storage: "Zero-ETL — queries existing data lakes/warehouses (Iceberg, Delta, Hudi, Snowflake, BigQuery, PostgreSQL)",
+    scalability: "Petabyte-level via underlying data platform, no data duplication",
+    bestFor: "Graph analytics on existing data, zero-ETL graph queries, data lake/warehouse overlays",
+    queryDetails: "openCypher and Gremlin, queries relational and lake data as graphs in real-time, no data migration needed",
+    aiDetails: "Graph analytics for AI pipelines, knowledge graph layer over existing data, LLM-friendly query interface",
+    pros: ["Zero-ETL — no data movement", "Works on existing infrastructure", "Fast time-to-value", "Petabyte scale"],
+    cons: ["Not a database — query engine only", "Performance depends on underlying data store", "New company, small team", "Limited write capabilities"],
+    dbEngineRank: "New entrant"
   }
 ];
 
