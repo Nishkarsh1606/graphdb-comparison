@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Graph DB Comparison</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3a;
+    --text: #e4e4ef;
+    --text-dim: #8888a0;
+    --accent: #6c5ce7;
+    --accent2: #a29bfe;
+    --green: #00b894;
+    --red: #e17055;
+    --yellow: #fdcb6e;
+    --blue: #74b9ff;
+    --pink: #fd79a8;
+    --orange: #e17055;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  .header {
+    padding: 48px 40px 32px;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+
+  .header h1 {
+    font-size: 2.4rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent2), var(--blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+  }
+
+  .header p {
+    color: var(--text-dim);
+    font-size: 1.05rem;
+    max-width: 700px;
+    line-height: 1.6;
+  }
+
+  .header .meta {
+    margin-top: 12px;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+  }
+
+  .controls {
+    padding: 0 40px 24px;
+    max-width: 1600px;
+    margin: 0 auto;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .search-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 16px;
+    color: var(--text);
+    font-size: 0.95rem;
+    width: 280px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-box:focus { border-color: var(--accent); }
+
+  .filter-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 18px;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .filter-btn:hover { border-color: var(--accent); color: var(--text); }
+  .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .stats-bar {
+    padding: 0 40px 20px;
+    max-width: 1600px;
+    margin: 0 auto;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 24px;
+    min-width: 140px;
+  }
+
+  .stat-card .num {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--accent2);
+  }
+
+  .stat-card .label {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+
+  .table-container {
+    padding: 0 40px 60px;
+    max-width: 1600px;
+    margin: 0 auto;
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--surface);
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    font-size: 0.88rem;
+  }
+
+  thead th {
+    background: var(--surface2);
+    padding: 14px 16px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-dim);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  thead th:hover { color: var(--accent2); }
+  thead th .sort-arrow { margin-left: 4px; font-size: 0.7rem; }
+
+  tbody tr {
+    transition: background 0.15s;
+  }
+
+  tbody tr:hover { background: var(--surface2); }
+
+  tbody td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  .db-name {
+    font-weight: 600;
+    color: var(--accent2);
+    white-space: nowrap;
+    font-size: 0.95rem;
+  }
+
+  .db-name a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .db-name a:hover { text-decoration: underline; }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .badge-green { background: rgba(0,184,148,0.15); color: var(--green); }
+  .badge-blue { background: rgba(116,185,255,0.15); color: var(--blue); }
+  .badge-yellow { background: rgba(253,203,110,0.15); color: var(--yellow); }
+  .badge-pink { background: rgba(253,121,168,0.15); color: var(--pink); }
+  .badge-red { background: rgba(225,112,85,0.15); color: var(--red); }
+  .badge-purple { background: rgba(162,155,254,0.15); color: var(--accent2); }
+
+  .check { color: var(--green); }
+  .cross { color: var(--red); }
+  .partial { color: var(--yellow); }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .tag {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+
+  .detail-row {
+    display: none;
+  }
+
+  .detail-row.open {
+    display: table-row;
+  }
+
+  .detail-cell {
+    padding: 20px 16px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+  }
+
+  .detail-section h4 {
+    font-size: 0.8rem;
+    color: var(--accent2);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+
+  .detail-section p, .detail-section ul {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  .detail-section ul {
+    padding-left: 16px;
+  }
+
+  .expand-btn {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+
+  .expand-btn:hover { color: var(--accent2); background: rgba(162,155,254,0.1); }
+
+  .tooltip {
+    position: relative;
+  }
+
+  .tooltip::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #222;
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 100;
+  }
+
+  .tooltip:hover::after { opacity: 1; }
+
+  footer {
+    text-align: center;
+    padding: 32px 40px;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    border-top: 1px solid var(--border);
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+
+  footer a { color: var(--accent2); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  @media (max-width: 768px) {
+    .header { padding: 24px 16px 20px; }
+    .header h1 { font-size: 1.6rem; }
+    .controls { padding: 0 16px 16px; }
+    .search-box { width: 100%; }
+    .stats-bar { padding: 0 16px 16px; }
+    .table-container { padding: 0 16px 40px; }
+    table { font-size: 0.8rem; }
+    thead th, tbody td { padding: 10px 10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Graph Database Comparison</h1>
+  <p>A comprehensive, interactive comparison of graph databases — features, query languages, scalability, licensing, and more. Inspired by <a href="https://superlinked.com/vector-db-comparison" style="color:var(--accent2)">Superlinked's Vector DB Comparison</a>.</p>
+  <div class="meta">Last updated: March 2026 · 12 databases · Compiled by HydraDB</div>
+</div>
+
+<div class="controls">
+  <input type="text" class="search-box" id="searchInput" placeholder="Search databases...">
+  <button class="filter-btn active" data-filter="all">All</button>
+  <button class="filter-btn" data-filter="open-source">Open Source</button>
+  <button class="filter-btn" data-filter="managed-cloud">Managed Cloud</button>
+  <button class="filter-btn" data-filter="multi-model">Multi-Model</button>
+  <button class="filter-btn" data-filter="distributed">Distributed</button>
+  <button class="filter-btn" data-filter="in-memory">In-Memory</button>
+</div>
+
+<div class="stats-bar">
+  <div class="stat-card"><div class="num" id="totalCount">12</div><div class="label">Databases</div></div>
+  <div class="stat-card"><div class="num">8</div><div class="label">Open Source</div></div>
+  <div class="stat-card"><div class="num">6</div><div class="label">Query Languages</div></div>
+  <div class="stat-card"><div class="num">10</div><div class="label">Cloud Options</div></div>
+</div>
+
+<div class="table-container">
+  <table id="comparisonTable">
+    <thead>
+      <tr>
+        <th data-col="name">Database <span class="sort-arrow"></span></th>
+        <th data-col="type">Type <span class="sort-arrow"></span></th>
+        <th data-col="query">Query Language <span class="sort-arrow"></span></th>
+        <th data-col="model">Graph Model <span class="sort-arrow"></span></th>
+        <th data-col="acid">ACID <span class="sort-arrow"></span></th>
+        <th data-col="distributed">Distributed <span class="sort-arrow"></span></th>
+        <th data-col="cloud">Managed Cloud <span class="sort-arrow"></span></th>
+        <th data-col="license">License <span class="sort-arrow"></span></th>
+        <th data-col="pricing">Pricing <span class="sort-arrow"></span></th>
+        <th data-col="ai">AI/Vector <span class="sort-arrow"></span></th>
+        <th>Details</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+</div>
+
+<footer>
+  Compiled by <a href="https://hydradb.com">HydraDB</a> · Data sourced from official docs, DB-Engines, and community reports · March 2026
+</footer>
+
+<script>
+const databases = [
+  {
+    name: "Neo4j",
+    url: "https://neo4j.com",
+    type: "Native Graph",
+    query: "Cypher / GQL",
+    model: "Property Graph",
+    acid: "yes",
+    distributed: "yes",
+    cloud: "AuraDB",
+    license: "GPL3 (CE) / Commercial (EE)",
+    pricing: "Free tier · AuraDB from ~$65/mo · Self-managed EE from $15K/yr",
+    ai: "yes",
+    tags: ["open-source", "managed-cloud", "distributed"],
+    founded: "2007",
+    headquarters: "San Mateo, CA",
+    storage: "Native graph storage engine",
+    scalability: "Infinigraph: 100TB+ distributed architecture, sharding, read replicas",
+    bestFor: "General-purpose graph, knowledge graphs, fraud detection, recommendations",
+    queryDetails: "Cypher (declarative, pattern-matching), GQL support, APOC procedures, Graph Data Science Library with 65+ algorithms",
+    aiDetails: "Graph Data Science library, Neo4j GenAI framework, LLM integration, embedding generation, GraphRAG support",
+    pros: ["Mature ecosystem & largest community", "Cypher is intuitive and well-documented", "Rich visualization (Bloom)", "Extensive algorithm library"],
+    cons: ["Enterprise features require paid license", "Write-heavy workloads can be challenging", "Vertical scaling limits on CE"],
+    dbEngineRank: "#1 Graph DB"
+  },
+  {
+    name: "Amazon Neptune",
+    url: "https://aws.amazon.com/neptune/",
+    type: "Managed Cloud",
+    query: "Gremlin / openCypher / SPARQL",
+    model: "Property Graph + RDF",
+    acid: "yes",
+    distributed: "yes",
+    cloud: "AWS Neptune",
+    license: "Proprietary (AWS Service)",
+    pricing: "Pay-as-you-go · Serverless from $0.1/hr · On-demand instances",
+    ai: "partial",
+    tags: ["managed-cloud", "distributed"],
+    founded: "2017",
+    headquarters: "AWS (Seattle, WA)",
+    storage: "Purpose-built, SSD-backed, 6-way replicated across 3 AZs",
+    scalability: "Serverless auto-scaling, up to 15 read replicas, billions of relationships",
+    bestFor: "AWS-native workloads, knowledge graphs, identity graphs, network management",
+    queryDetails: "Supports 3 query languages: Gremlin (traversal), openCypher (pattern), SPARQL (RDF). Neptune Analytics for graph algorithms",
+    aiDetails: "Neptune ML for predictions using GNNs, Neptune Analytics for graph algorithms, integration with SageMaker and Bedrock",
+    pros: ["Fully managed — zero ops", "Multi-query language flexibility", "Tight AWS ecosystem integration", "Serverless option"],
+    cons: ["AWS lock-in", "Can be expensive at scale", "Limited customization vs self-hosted", "No on-premise option"],
+    dbEngineRank: "#3 Graph DB"
+  },
+  {
+    name: "TigerGraph",
+    url: "https://www.tigergraph.com",
+    type: "Native Graph",
+    query: "GSQL / openCypher / GQL",
+    model: "Property Graph",
+    acid: "yes",
+    distributed: "yes",
+    cloud: "Savanna Cloud",
+    license: "Free (CE) / Commercial (EE)",
+    pricing: "Savanna Cloud pay-as-you-go · Enterprise annual license by capacity",
+    ai: "yes",
+    tags: ["managed-cloud", "distributed"],
+    founded: "2012",
+    headquarters: "Redwood City, CA",
+    storage: "Native MPP graph engine, compressed adjacency lists",
+    scalability: "Massively parallel, horizontal scaling, real-time deep-link analytics on billions of vertices/edges",
+    bestFor: "Real-time fraud detection, supply chain, large-scale analytics, AI/ML feature engineering",
+    queryDetails: "GSQL (SQL-like, Turing-complete, parallel graph algorithms), openCypher and GQL support, GraphStudio visual IDE",
+    aiDetails: "Graph ML workbench, CoPilot AI assistant, in-database ML, GNN support, LLM integration",
+    pros: ["Fastest for deep-link analytics", "GSQL is powerful for complex algorithms", "Excellent for large-scale real-time workloads", "Built-in ML features"],
+    cons: ["GSQL learning curve", "Smaller community than Neo4j", "Enterprise pricing can be steep", "Vendor lock-in concerns"],
+    dbEngineRank: "#5 Graph DB"
+  },
+  {
+    name: "ArangoDB",
+    url: "https://arango.ai",
+    type: "Multi-Model",
+    query: "AQL",
+    model: "Property Graph + Document + Key-Value",
+    acid: "yes",
+    distributed: "yes",
+    cloud: "ArangoGraph (Oasis)",
+    license: "BSL 1.1 (CE) / Commercial (EE)",
+    pricing: "Free tier · On-demand from $0.20/hr · Enterprise contact sales",
+    ai: "yes",
+    tags: ["open-source", "managed-cloud", "multi-model", "distributed"],
+    founded: "2011",
+    headquarters: "San Francisco, CA",
+    storage: "RocksDB-based, multi-model native storage",
+    scalability: "Horizontal sharding, SmartGraphs for optimized distributed traversals, multi-datacenter replication",
+    bestFor: "Multi-model use cases, microservices, content management, IoT, GraphRAG",
+    queryDetails: "AQL (ArangoDB Query Language) — declarative, SQL-like, works across graphs, documents, and key-value in a single query. ArangoSearch for full-text. Pregel for graph analytics",
+    aiDetails: "VectorRAG, GraphRAG, HybridRAG capabilities, ArangoML pipeline, vector search integration",
+    pros: ["True multi-model: graph + document + KV in one", "Flexible AQL across models", "Good distributed architecture", "Active community"],
+    cons: ["Jack-of-all-trades risk", "BSL license change concerned some users", "Graph performance may trail native-only DBs", "Smaller graph-specific ecosystem"],
+    dbEngineRank: "#6 Graph DB"
+  },
+  {
+    name: "JanusGraph",
+    url: "https://janusgraph.org",
+    type: "Native Graph",
+    query: "Gremlin (TinkerPop)",
+    model: "Property Graph",
+    acid: "partial",
+    distributed: "yes",
+    cloud: "No official (IBM offers managed)",
+    license: "Apache 2.0",
+    pricing: "Free · Infra costs for storage/index backends",
+    ai: "no",
+    tags: ["open-source", "distributed"],
+    founded: "2017",
+    headquarters: "Linux Foundation (community)",
+    storage: "Pluggable: Cassandra, HBase, ScyllaDB, BerkeleyDB",
+    scalability: "Horizontal via backend (Cassandra/HBase clusters), designed for 100B+ edges",
+    bestFor: "Large-scale distributed graphs, telco, social networks, research workloads",
+    queryDetails: "Gremlin traversal language (Apache TinkerPop), pluggable indexing (Elasticsearch, Solr, Lucene) for full-text and geo queries",
+    aiDetails: "No native AI/vector features; can integrate with external ML pipelines",
+    pros: ["Fully open source (Apache 2.0)", "Pluggable storage/index backends", "Scales massively with Cassandra/HBase", "Strong TinkerPop ecosystem"],
+    cons: ["Steep learning curve", "No managed cloud offering", "Setup complexity", "Slower development cadence"],
+    dbEngineRank: "#7 Graph DB"
+  },
+  {
+    name: "Dgraph",
+    url: "https://dgraph.io",
+    type: "Native Graph",
+    query: "DQL / GraphQL",
+    model: "Property Graph",
+    acid: "yes",
+    distributed: "yes",
+    cloud: "Dgraph Cloud",
+    license: "Apache 2.0 (CE) / Proprietary (EE)",
+    pricing: "Free CE · Cloud shared/dedicated instances · EE contact sales",
+    ai: "partial",
+    tags: ["open-source", "managed-cloud", "distributed"],
+    founded: "2016",
+    headquarters: "San Francisco, CA (acquired by Hypermode)",
+    storage: "Badger (LSM-tree based) with RAFT consensus",
+    scalability: "Horizontally distributed, data partitioned across nodes, RAFT for consistency",
+    bestFor: "GraphQL-native apps, social graphs, recommendation engines, real-time queries",
+    queryDetails: "DQL (Dgraph Query Language — GraphQL+-), native GraphQL API, full-text search, geospatial, regex, fuzzy matching",
+    aiDetails: "Integration with Hypermode AI platform, vector search planned, GraphQL API suits LLM tool-calling",
+    pros: ["Native GraphQL support", "Horizontally scalable", "Low-latency distributed queries", "Good developer experience"],
+    cons: ["Acquired by Hypermode — future direction uncertain", "Smaller community", "DQL is non-standard", "Limited graph algorithms"],
+    dbEngineRank: "#8 Graph DB"
+  },
+  {
+    name: "NebulaGraph",
+    url: "https://nebula-graph.io",
+    type: "Native Graph",
+    query: "nGQL / openCypher / GQL",
+    model: "Property Graph",
+    acid: "partial",
+    distributed: "yes",
+    cloud: "NebulaGraph Cloud",
+    license: "Apache 2.0 (CE) / Commercial (EE)",
+    pricing: "Free CE · Cloud Standard 14-day trial · EE contact sales",
+    ai: "yes",
+    tags: ["open-source", "managed-cloud", "distributed"],
+    founded: "2018",
+    headquarters: "Hangzhou, China",
+    storage: "Shared-nothing, storage-compute separation, RocksDB-based",
+    scalability: "Linear horizontal scaling, 100B+ vertices, trillions of edges, HTAP workloads",
+    bestFor: "Super-large-scale graphs, social networks, knowledge graphs, financial risk control",
+    queryDetails: "nGQL (Cypher-like), full openCypher and GQL standard support, SAMPLE clause for super-node control",
+    aiDetails: "Native vector search (EE v5.1+), full-text indexes, hybrid retrieval (graph + vector + keyword), GraphRAG-ready",
+    pros: ["Handles massive scale efficiently", "Storage-compute separation", "Full GQL standard support", "Growing AI/vector capabilities"],
+    cons: ["Enterprise features behind paywall", "Documentation gaps in English", "Smaller Western community", "Newer ecosystem"],
+    dbEngineRank: "#4 Graph DB"
+  },
+  {
+    name: "Memgraph",
+    url: "https://memgraph.com",
+    type: "In-Memory Graph",
+    query: "openCypher",
+    model: "Property Graph",
+    acid: "yes",
+    distributed: "partial",
+    cloud: "Memgraph Cloud",
+    license: "BSL 1.1 (CE) / Commercial (EE)",
+    pricing: "Free CE · Cloud starts at ~$50/mo · EE contact sales",
+    ai: "yes",
+    tags: ["open-source", "managed-cloud", "in-memory"],
+    founded: "2016",
+    headquarters: "London, UK",
+    storage: "In-memory with WAL-based durability, snapshot recovery",
+    scalability: "Vertical scaling (in-memory), replication for HA, optimized for real-time streaming",
+    bestFor: "Real-time analytics, streaming graph processing, fraud detection, network monitoring",
+    queryDetails: "openCypher with MAGE (Memgraph Advanced Graph Extensions) — 37+ graph algorithms, custom C/C++/Python procedures",
+    aiDetails: "Vector search (v3.0+), edge vector indexing (v3.4), GraphRAG, AI Graph Toolkit, GraphChat LLM assistant, LLM integration",
+    pros: ["Blazing fast in-memory performance", "Real-time streaming support (Kafka/Pulsar)", "Cypher compatibility", "Strong AI/vector integration"],
+    cons: ["Dataset limited by RAM", "BSL license", "Less mature distributed story", "Smaller community"],
+    dbEngineRank: "#10 Graph DB"
+  },
+  {
+    name: "FalkorDB",
+    url: "https://www.falkordb.com",
+    type: "In-Memory Graph",
+    query: "openCypher",
+    model: "Property Graph",
+    acid: "partial",
+    distributed: "yes",
+    cloud: "FalkorDB Cloud",
+    license: "Source Available (Server Side Public License)",
+    pricing: "Free CE · Cloud pricing on request",
+    ai: "yes",
+    tags: ["open-source", "managed-cloud", "in-memory"],
+    founded: "2023 (fork of RedisGraph)",
+    headquarters: "Tel Aviv, Israel",
+    storage: "Sparse matrix algebra backend (GraphBLAS), in-memory",
+    scalability: "10,000+ graphs per instance, horizontal via clustering, sub-millisecond traversals",
+    bestFor: "GraphRAG, recommendation engines, fraud prevention, real-time feature serving",
+    queryDetails: "openCypher with FalkorDB extensions, optimized for multi-hop queries with constant-time traversal",
+    aiDetails: "Purpose-built for GraphRAG, knowledge graph grounding for LLMs, real-time graph feature serving for ML, string interning for memory efficiency",
+    pros: ["Extremely fast (GraphBLAS backend)", "Designed for GraphRAG from the ground up", "Memory efficient", "Multi-tenant friendly"],
+    cons: ["Relatively new (RedisGraph fork)", "SSPL license concerns", "Smaller ecosystem", "Limited graph algorithm library vs Neo4j"],
+    dbEngineRank: "#9 Graph DB"
+  },
+  {
+    name: "TypeDB",
+    url: "https://typedb.com",
+    type: "Polymorphic DB",
+    query: "TypeQL",
+    model: "Hypergraph / Conceptual",
+    acid: "yes",
+    distributed: "planned",
+    cloud: "TypeDB Cloud",
+    license: "MPL 2.0 (CE) / Commercial (EE)",
+    pricing: "Free CE · Cloud & Enterprise contact sales",
+    ai: "partial",
+    tags: ["open-source", "managed-cloud"],
+    founded: "2016",
+    headquarters: "London, UK",
+    storage: "RocksDB-based (TypeDB 3 — Rust rewrite)",
+    scalability: "Single-node optimized (TypeDB 3), distributed planned, 3-5x perf improvement over v2",
+    bestFor: "Complex domain modeling, biomedical research, regulatory compliance, knowledge representation",
+    queryDetails: "TypeQL — declarative, functional, strongly-typed, supports n-ary relationships natively, Datalog-like functions, schema-first with type inheritance and polymorphism",
+    aiDetails: "TypeQL designed for LLM readability, knowledge graph foundation for AI, schema-enforced reasoning",
+    pros: ["Most expressive data model (hypergraph)", "Schema-first prevents data quality issues", "N-ary relationships without workarounds", "Rust rewrite = fast"],
+    cons: ["TypeQL learning curve (non-standard)", "Smaller community", "Distributed support still maturing", "Less ecosystem tooling"],
+    dbEngineRank: "#11 Graph DB"
+  },
+  {
+    name: "OrientDB",
+    url: "https://orientdb.dev",
+    type: "Multi-Model",
+    query: "SQL-like / Gremlin",
+    model: "Property Graph + Document + Object + KV",
+    acid: "yes",
+    distributed: "yes",
+    cloud: "No official managed",
+    license: "Apache 2.0 (CE) / Commercial (EE)",
+    pricing: "Free CE · EE contact sales",
+    ai: "no",
+    tags: ["open-source", "multi-model", "distributed"],
+    founded: "2010",
+    headquarters: "London, UK (SAP acquired, now community-driven)",
+    storage: "PLocal (paginated local) and memory storage engines",
+    scalability: "Multi-master replication, sharding, distributed architecture",
+    bestFor: "Multi-model use cases, content management, legacy migration from RDBMS",
+    queryDetails: "SQL-like syntax (easy for RDBMS devs), Gremlin support via TinkerPop, no JOINs needed — direct relationship traversal",
+    aiDetails: "No native AI/vector features",
+    pros: ["Multi-model flexibility", "SQL-like syntax lowers barrier", "No JOINs for relationship traversal", "Apache 2.0 license"],
+    cons: ["Development slowed significantly", "SAP divested — uncertain future", "Documentation outdated", "Falling behind modern competitors"],
+    dbEngineRank: "#12 Graph DB"
+  },
+  {
+    name: "PuppyGraph",
+    url: "https://www.puppygraph.com",
+    type: "Graph Query Engine",
+    query: "openCypher / Gremlin",
+    model: "Property Graph (virtual)",
+    acid: "N/A (reads from source)",
+    distributed: "yes",
+    cloud: "PuppyGraph Cloud",
+    license: "Proprietary",
+    pricing: "Free Developer Edition · Enterprise by compute resources",
+    ai: "partial",
+    tags: ["managed-cloud", "distributed"],
+    founded: "2023",
+    headquarters: "San Jose, CA",
+    storage: "Zero-ETL — queries existing data lakes/warehouses (Iceberg, Delta, Hudi, Snowflake, BigQuery, PostgreSQL)",
+    scalability: "Petabyte-level via underlying data platform, no data duplication",
+    bestFor: "Graph analytics on existing data, zero-ETL graph queries, data lake/warehouse overlays",
+    queryDetails: "openCypher and Gremlin, queries relational and lake data as graphs in real-time, no data migration needed",
+    aiDetails: "Graph analytics for AI pipelines, knowledge graph layer over existing data, LLM-friendly query interface",
+    pros: ["Zero-ETL — no data movement", "Works on existing infrastructure", "Fast time-to-value", "Petabyte scale"],
+    cons: ["Not a database — query engine only", "Performance depends on underlying data store", "New company, small team", "Limited write capabilities"],
+    dbEngineRank: "New entrant"
+  }
+];
+
+// Render table
+function renderTable(data) {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+  
+  data.forEach((db, i) => {
+    const acidIcon = db.acid === 'yes' ? '<span class="check">✓</span>' : db.acid === 'partial' ? '<span class="partial">◐</span>' : db.acid === 'N/A' ? '<span style="color:var(--text-dim)">N/A</span>' : '<span class="cross">✗</span>';
+    const distIcon = db.distributed === 'yes' ? '<span class="check">✓</span>' : db.distributed === 'partial' ? '<span class="partial">◐</span>' : '<span class="cross">✗</span>';
+    const aiIcon = db.ai === 'yes' ? '<span class="check">✓</span>' : db.ai === 'partial' ? '<span class="partial">◐</span>' : '<span class="cross">✗</span>';
+
+    const typeBadge = {
+      'Native Graph': 'badge-green',
+      'Managed Cloud': 'badge-blue',
+      'Multi-Model': 'badge-purple',
+      'In-Memory Graph': 'badge-pink',
+      'Polymorphic DB': 'badge-yellow',
+      'Graph Query Engine': 'badge-red'
+    }[db.type] || 'badge-green';
+
+    const row = document.createElement('tr');
+    row.className = 'db-row';
+    row.dataset.index = i;
+    row.innerHTML = `
+      <td class="db-name"><a href="${db.url}" target="_blank">${db.name}</a></td>
+      <td><span class="badge ${typeBadge}">${db.type}</span></td>
+      <td>${db.query}</td>
+      <td style="font-size:0.82rem">${db.model}</td>
+      <td style="text-align:center">${acidIcon}</td>
+      <td style="text-align:center">${distIcon}</td>
+      <td style="font-size:0.82rem">${db.cloud}</td>
+      <td style="font-size:0.82rem">${db.license}</td>
+      <td style="font-size:0.82rem">${db.pricing}</td>
+      <td style="text-align:center">${aiIcon}</td>
+      <td><button class="expand-btn" data-idx="${i}">▶</button></td>
+    `;
+    tbody.appendChild(row);
+
+    // Detail row
+    const detailRow = document.createElement('tr');
+    detailRow.className = 'detail-row';
+    detailRow.id = `detail-${i}`;
+    detailRow.innerHTML = `
+      <td colspan="11" class="detail-cell">
+        <div class="detail-grid">
+          <div class="detail-section">
+            <h4>Overview</h4>
+            <p><strong>Founded:</strong> ${db.founded}<br>
+            <strong>HQ:</strong> ${db.headquarters}<br>
+            <strong>DB-Engines:</strong> ${db.dbEngineRank}<br>
+            <strong>Storage:</strong> ${db.storage}</p>
+          </div>
+          <div class="detail-section">
+            <h4>Scalability</h4>
+            <p>${db.scalability}</p>
+            <h4 style="margin-top:12px">Best For</h4>
+            <p>${db.bestFor}</p>
+          </div>
+          <div class="detail-section">
+            <h4>Query Details</h4>
+            <p>${db.queryDetails}</p>
+            ${db.aiDetails ? `<h4 style="margin-top:12px">AI / Vector</h4><p>${db.aiDetails}</p>` : ''}
+          </div>
+          <div class="detail-section">
+            <h4>Pros</h4>
+            <ul>${db.pros.map(p => `<li>${p}</li>`).join('')}</ul>
+            <h4 style="margin-top:12px">Cons</h4>
+            <ul>${db.cons.map(c => `<li>${c}</li>`).join('')}</ul>
+          </div>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(detailRow);
+  });
+
+  document.getElementById('totalCount').textContent = data.length;
+
+  // Bind expand buttons
+  document.querySelectorAll('.expand-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = btn.dataset.idx;
+      const detail = document.getElementById(`detail-${idx}`);
+      const isOpen = detail.classList.contains('open');
+      detail.classList.toggle('open');
+      btn.textContent = isOpen ? '▶' : '▼';
+    });
+  });
+}
+
+// Filter
+let currentFilter = 'all';
+let searchTerm = '';
+
+function applyFilters() {
+  let filtered = databases;
+  
+  if (currentFilter !== 'all') {
+    filtered = filtered.filter(db => db.tags.includes(currentFilter));
+  }
+  
+  if (searchTerm) {
+    const term = searchTerm.toLowerCase();
+    filtered = filtered.filter(db => 
+      db.name.toLowerCase().includes(term) ||
+      db.type.toLowerCase().includes(term) ||
+      db.query.toLowerCase().includes(term) ||
+      db.model.toLowerCase().includes(term) ||
+      db.license.toLowerCase().includes(term) ||
+      db.bestFor.toLowerCase().includes(term)
+    );
+  }
+  
+  renderTable(filtered);
+}
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    applyFilters();
+  });
+});
+
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  searchTerm = e.target.value;
+  applyFilters();
+});
+
+// Sort
+let sortCol = null;
+let sortAsc = true;
+
+document.querySelectorAll('thead th[data-col]').forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.col;
+    if (sortCol === col) {
+      sortAsc = !sortAsc;
+    } else {
+      sortCol = col;
+      sortAsc = true;
+    }
+    
+    const colMap = { name: 'name', type: 'type', query: 'query', model: 'model', acid: 'acid', distributed: 'distributed', cloud: 'cloud', license: 'license', pricing: 'pricing', ai: 'ai' };
+    
+    databases.sort((a, b) => {
+      const av = a[colMap[col]] || '';
+      const bv = b[colMap[col]] || '';
+      return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+    });
+    
+    // Update sort arrows
+    document.querySelectorAll('thead th .sort-arrow').forEach(s => s.textContent = '');
+    th.querySelector('.sort-arrow').textContent = sortAsc ? ' ↑' : ' ↓';
+    
+    applyFilters();
+  });
+});
+
+// Initial render
+renderTable(databases);
+</script>
+</body>
+</html>
